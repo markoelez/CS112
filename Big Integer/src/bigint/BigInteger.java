@@ -96,27 +96,34 @@ public class BigInteger {
 		// create linked list root
 		int start_idx = str.length()-1;
 		bigInt.front = new DigitNode(Character.getNumericValue(str.charAt(start_idx)), null);
-		System.out.println("FRONT: \n" + str.charAt(str.length()-1));
+//		System.out.println("FRONT: \n" + str.charAt(str.length()-1));
 		// build the rest
 		DigitNode ptr = bigInt.front;
 		for (int i = start_idx-1; i>-1; i--) {
 			if (Character.isDigit(str.charAt(i))) {
-				System.out.println(Character.getNumericValue(str.charAt(i)));
+//				System.out.println(Character.getNumericValue(str.charAt(i)));
 				ptr.next = new DigitNode(Character.getNumericValue(str.charAt(i)), null);
 			} else {
 				throw new IllegalArgumentException("Incorrect format");
 			}
 			ptr = ptr.next;
 		}
-		System.out.println("----------------------------------");
-		DigitNode n = bigInt.front;
-		while (n != null) {
-			System.out.print(n.digit + " ");
-			n = n.next;
-		}
-		System.out.println("\n----------------------------------");
 
 		return bigInt;
+	}
+
+	private static DigitNode padNode(DigitNode snode, int diff) {
+		DigitNode ptr = snode;
+
+		while (ptr.next != null) {
+			ptr = ptr.next;
+		}
+
+		while ((diff--) != 0) {
+			ptr.next = new DigitNode(0, null);
+			ptr = ptr.next;
+		}
+		return snode;
 	}
 	
 	/**
@@ -131,18 +138,20 @@ public class BigInteger {
 	 * @return Result big integer
 	 */
 	public static BigInteger add(BigInteger first, BigInteger second) {
-		
-		DigitNode result = null;
-		DigitNode prev = null;
-		DigitNode temp = null;
-		int carry = 0;
-		int sum = 0;
 
 		boolean negative;
 
-		BigInteger res = new BigInteger();
-
 		if ((first.negative && second.negative) || (!first.negative && !second.negative)) {
+			// ADDITION
+			DigitNode result = null;
+			DigitNode prev = null;
+			DigitNode temp = null;
+			int carry = 0;
+			int sum = 0;
+
+
+			BigInteger res = new BigInteger();
+
 			negative = first.negative;
 			DigitNode root1 = first.front;
 			DigitNode root2 = second.front;
@@ -183,7 +192,7 @@ public class BigInteger {
 			// ADD NUM DIGITS
 			return res;
 		} else {
-			// subtraction
+			// SUBTRACTION
 
 			// first figure out which is greater
 			DigitNode temp1 = first.front;
@@ -195,9 +204,11 @@ public class BigInteger {
 			if (first.numDigits > second.numDigits) {
 				lnode = first.front;
 				snode = second.front;
+				negative = first.negative;
 			} else if (first.numDigits < second.numDigits) {
 				lnode = second.front;
 				snode = first.front;
+				negative = second.negative;
 			} else {
 				while (temp1 != null && temp2!=null) {
 					if (temp1.digit != temp2.digit) {
@@ -208,16 +219,72 @@ public class BigInteger {
 					temp1 = temp1.next;
 					temp2 = temp2.next;
 				}
+				negative = first.front == lnode ? first.negative : second.negative;
 			}
 
 			System.out.println("larger: " + lnode.digit);
 			System.out.println("smaller: " + snode.digit);
 
-			
+			int diff = Math.abs(first.numDigits - second.numDigits);
+			if (diff != 0) {
+				snode = padNode(snode, diff);
+			}
 
-			return null;
+			BigInteger ans = new BigInteger();
+			ans.front = new DigitNode(0, null);
+			DigitNode ansPtr = ans.front;
+
+			boolean borrow = false;
+
+			while (lnode != null && snode != null) {
+				int d1 = lnode.digit;
+				int d2 = snode.digit;
+				int resDig = 0;
+				// if we had to borrow previously, decrement digit
+				if (borrow) {
+					d1 --;
+					borrow = false;
+				}
+
+				if (d1 > d2) {
+					// no borrow, just subtract
+					resDig = d1 - d2;
+				} else if (d1 < d2){
+					// we need to borrow
+					borrow = true;
+					resDig = 10 + d1 - d2;
+				}
+				// set current digit to sum
+				ansPtr.digit = resDig;
+				// check if we have more sums to calc before creating next node
+				if (lnode.next != null || snode.next != null){
+					ansPtr.next = new DigitNode(resDig, null);
+				}
+				// move pointers along
+				ansPtr = ansPtr.next;
+				lnode = lnode.next;
+				snode = snode.next;
+				// debug print
+				System.out.println("RESDIG :::::::::::::::::::::::::::::::::::::: " + resDig);
+			}
+
+			ans.negative = negative;
+
+			System.out.println("NEGATIVE :::::::::::::::::::::: " + negative);
+
+			System.out.println("----------------------------------");
+			DigitNode n = ans.front;
+			while (n != null) {
+				System.out.print(n.digit + " ");
+				n = n.next;
+			}
+			System.out.println("\n----------------------------------");
+
+			return ans;
 		}
 	}
+
+
 	
 	/**
 	 * Returns the BigInteger obtained by multiplying the first big integer
