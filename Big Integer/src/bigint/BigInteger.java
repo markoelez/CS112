@@ -38,6 +38,18 @@ public class BigInteger {
 		numDigits = 0;
 		front = null;
 	}
+
+	private static String removeLeadingZeros(String string) {
+		int idx;
+		for (idx=0; idx<string.length(); idx++) {
+			if (string.charAt(idx) == '0') {
+				idx++;
+			} else {
+				break;
+			}
+		}
+		return string.substring(idx);
+	}
 	
 	/**
 	 * Parses an input integer string into a corresponding BigInteger instance.
@@ -84,9 +96,11 @@ public class BigInteger {
 				bigInt.negative = false;
 			}
 			// CHANGE METHOD FOR REMOVING ZEROS FROM FRONT
-			str = String.valueOf(Integer.parseInt(str.substring(1)));
+			str = removeLeadingZeros(str.substring(1));
+//			str = String.valueOf(Integer.parseInt(str.substring(1)));
 		} else if (Character.isDigit(str.charAt(0))){
-			str = String.valueOf(Integer.parseInt(str));
+			str = removeLeadingZeros(str);
+//			str = String.valueOf(Integer.parseInt(str));
 		} else {
 			throw new IllegalArgumentException("Incorrect format");
 		}
@@ -124,6 +138,17 @@ public class BigInteger {
 			ptr = ptr.next;
 		}
 		return snode;
+	}
+
+	private static void traverseNodes(DigitNode node) {
+		// utility function to traverse and print nodes of a linked list
+		System.out.println("----------------------------------");
+		DigitNode n = node;
+		while (n != null) {
+			System.out.print(n.digit + " ");
+			n = n.next;
+		}
+		System.out.println("\n----------------------------------");
 	}
 	
 	/**
@@ -198,6 +223,9 @@ public class BigInteger {
 			DigitNode temp1 = first.front;
 			DigitNode temp2 = second.front;
 
+			DigitNode ref1 = temp1;
+			DigitNode ref2 = temp2;
+
 			DigitNode lnode = null;
 			DigitNode snode = null;
 
@@ -210,25 +238,28 @@ public class BigInteger {
 				snode = first.front;
 				negative = second.negative;
 			} else {
-				while (temp1 != null && temp2!=null) {
-					if (temp1.digit != temp2.digit) {
-						lnode = temp1.digit > temp2.digit ? temp1 : temp2;
-						snode = temp1.digit > temp2.digit ? temp2 : temp1;
+				while (ref1 != null && ref2!=null) {
+					if (ref1.digit != ref2.digit) {
+						lnode = ref1.digit > ref2.digit ? temp1 : temp2;
+						snode = ref1.digit > ref2.digit ? temp2 : temp1;
 						break;
 					}
-					temp1 = temp1.next;
-					temp2 = temp2.next;
+					ref1 = ref1.next;
+					ref2 = ref2.next;
 				}
+				traverseNodes(lnode);
+				traverseNodes(snode);
+
 				negative = first.front == lnode ? first.negative : second.negative;
 			}
-
-			System.out.println("larger: " + lnode.digit);
-			System.out.println("smaller: " + snode.digit);
 
 			int diff = Math.abs(first.numDigits - second.numDigits);
 			if (diff != 0) {
 				snode = padNode(snode, diff);
 			}
+
+			traverseNodes(lnode);
+			traverseNodes(snode);
 
 			BigInteger ans = new BigInteger();
 			ans.front = new DigitNode(0, null);
@@ -267,18 +298,28 @@ public class BigInteger {
 				// debug print
 				System.out.println("RESDIG :::::::::::::::::::::::::::::::::::::: " + resDig);
 			}
-
 			ans.negative = negative;
+			// debug
+			traverseNodes(ans.front);
 
-			System.out.println("NEGATIVE :::::::::::::::::::::: " + negative);
-
-			System.out.println("----------------------------------");
-			DigitNode n = ans.front;
-			while (n != null) {
-				System.out.print(n.digit + " ");
-				n = n.next;
-			}
-			System.out.println("\n----------------------------------");
+			// REMOVE TRAILING ZEROS
+			 int last_idx = 0;
+			 int i = 0;
+			 DigitNode ref = ans.front;
+			 while (ref != null) {
+			 	if (ref.digit != 0) {
+			 		last_idx = i;
+				}
+			 	i++;
+			 	ref = ref.next;
+			 }
+			 int n = 0;
+			 DigitNode temp = ans.front;
+			 while (n != last_idx) {
+			 	temp = temp.next;
+			 	n++;
+			 }
+			 temp.next = null;
 
 			return ans;
 		}
