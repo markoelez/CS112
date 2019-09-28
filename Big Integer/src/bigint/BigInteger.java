@@ -39,16 +39,13 @@ public class BigInteger {
 		front = null;
 	}
 
-	private static String removeLeadingZeros(String string) {
-		int idx;
-		for (idx=0; idx<string.length(); idx++) {
-			if (string.charAt(idx) == '0') {
-				idx++;
-			} else {
-				break;
-			}
+	private static String removeLeadingZeros(String s) {
+		int i = 0;
+		while (i<s.length()-1 && s.charAt(i) == '0') {
+			i++;
 		}
-		return string.substring(idx);
+		System.out.println(s.substring(i));
+		return s.substring(i);
 	}
 	
 	/**
@@ -150,6 +147,20 @@ public class BigInteger {
 		}
 		System.out.println("\n----------------------------------");
 	}
+
+	private static DigitNode reverse(DigitNode node) {
+		DigitNode prev = null;
+		DigitNode current = node;
+		DigitNode next = null;
+		while (current != null) {
+			next = current.next;
+			current.next = prev;
+			prev = current;
+			current = next;
+		}
+		node = prev;
+		return node;
+	}
 	
 	/**
 	 * Adds the first and second big integers, and returns the result in a NEW BigInteger object. 
@@ -223,9 +234,6 @@ public class BigInteger {
 			DigitNode temp1 = first.front;
 			DigitNode temp2 = second.front;
 
-			DigitNode ref1 = temp1;
-			DigitNode ref2 = temp2;
-
 			DigitNode lnode = null;
 			DigitNode snode = null;
 
@@ -238,17 +246,33 @@ public class BigInteger {
 				snode = first.front;
 				negative = second.negative;
 			} else {
-				while (ref1 != null && ref2!=null) {
-					if (ref1.digit != ref2.digit) {
-						lnode = ref1.digit > ref2.digit ? temp1 : temp2;
-						snode = ref1.digit > ref2.digit ? temp2 : temp1;
-						break;
+				System.out.println("SAME LENGTH");
+				DigitNode t1 = temp1;//reverse(temp1);
+				DigitNode t2 = temp2;//reverse(temp2);
+				int d1 = 0;
+				int d2 = 0;
+				while (t1 != null && t2!=null) {
+
+//					if (t1.digit != t2.digit) {
+//						System.out.println("HERE::::: " + t1.digit);
+//						lnode = t1.digit > t2.digit ? temp1 : temp2;
+//						snode = t1.digit > t2.digit ? temp2 : temp1;
+//						break;
+//					}
+					if (t1.digit != t2.digit) {
+						d1 = t1.digit;
+						d2 = t2.digit;
 					}
-					ref1 = ref1.next;
-					ref2 = ref2.next;
+					t1 = t1.next;
+					t2 = t2.next;
 				}
-				traverseNodes(lnode);
-				traverseNodes(snode);
+				if (d1 == 0 && d2==0) {
+					return new BigInteger();
+				}
+				lnode = d1 > d2 ? temp1 : temp2;
+				snode = d1 > d2 ? temp2 : temp1;
+//				traverseNodes(lnode);
+//				traverseNodes(snode);
 
 				negative = first.front == lnode ? first.negative : second.negative;
 			}
@@ -339,9 +363,7 @@ public class BigInteger {
 	 */
 	public static BigInteger multiply(BigInteger first, BigInteger second) {
 		
-		/* IMPLEMENT THIS METHOD */
 		
-		// following line is a placeholder for compilation
 		return null;
 	}
 	
@@ -363,4 +385,6 @@ public class BigInteger {
 		}
 		return retval;
 	}
+
+
 }
