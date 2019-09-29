@@ -47,6 +47,19 @@ public class BigInteger {
 		System.out.println(s.substring(i));
 		return s.substring(i);
 	}
+
+	private static int getNumDigits(DigitNode node) {
+		int i = 0;
+		DigitNode ref = node;
+		if (ref == null) {
+			return 0;
+		}
+		while (ref.next != null) {
+			ref = ref.next;
+			i++;
+		}
+		return i;
+	}
 	
 	/**
 	 * Parses an input integer string into a corresponding BigInteger instance.
@@ -92,12 +105,9 @@ public class BigInteger {
 			} else if (sign == '+'){
 				bigInt.negative = false;
 			}
-			// CHANGE METHOD FOR REMOVING ZEROS FROM FRONT
 			str = removeLeadingZeros(str.substring(1));
-//			str = String.valueOf(Integer.parseInt(str.substring(1)));
 		} else if (Character.isDigit(str.charAt(0))){
 			str = removeLeadingZeros(str);
-//			str = String.valueOf(Integer.parseInt(str));
 		} else {
 			throw new IllegalArgumentException("Incorrect format");
 		}
@@ -107,19 +117,16 @@ public class BigInteger {
 		// create linked list root
 		int start_idx = str.length()-1;
 		bigInt.front = new DigitNode(Character.getNumericValue(str.charAt(start_idx)), null);
-//		System.out.println("FRONT: \n" + str.charAt(str.length()-1));
 		// build the rest
 		DigitNode ptr = bigInt.front;
 		for (int i = start_idx-1; i>-1; i--) {
 			if (Character.isDigit(str.charAt(i))) {
-//				System.out.println(Character.getNumericValue(str.charAt(i)));
 				ptr.next = new DigitNode(Character.getNumericValue(str.charAt(i)), null);
 			} else {
 				throw new IllegalArgumentException("Incorrect format");
 			}
 			ptr = ptr.next;
 		}
-
 		return bigInt;
 	}
 
@@ -148,19 +155,28 @@ public class BigInteger {
 		System.out.println("\n----------------------------------");
 	}
 
-	private static DigitNode reverse(DigitNode node) {
-		DigitNode prev = null;
-		DigitNode current = node;
-		DigitNode next = null;
-		while (current != null) {
-			next = current.next;
-			current.next = prev;
-			prev = current;
-			current = next;
+	private static DigitNode removeTrailingZeros(DigitNode node) {
+		int last_idx = 0;
+		int i = 0;
+		DigitNode ref = node;
+		while (ref != null) {
+			if (ref.digit != 0) {
+				last_idx = i;
+			}
+			i++;
+			ref = ref.next;
 		}
-		node = prev;
+		int n = 0;
+		DigitNode temp = node;
+		while (n != last_idx) {
+			temp = temp.next;
+			n++;
+		}
+		temp.next = null;
 		return node;
 	}
+
+
 	
 	/**
 	 * Adds the first and second big integers, and returns the result in a NEW BigInteger object. 
@@ -247,18 +263,11 @@ public class BigInteger {
 				negative = second.negative;
 			} else {
 				System.out.println("SAME LENGTH");
-				DigitNode t1 = temp1;//reverse(temp1);
-				DigitNode t2 = temp2;//reverse(temp2);
+				DigitNode t1 = temp1;
+				DigitNode t2 = temp2;
 				int d1 = 0;
 				int d2 = 0;
 				while (t1 != null && t2!=null) {
-
-//					if (t1.digit != t2.digit) {
-//						System.out.println("HERE::::: " + t1.digit);
-//						lnode = t1.digit > t2.digit ? temp1 : temp2;
-//						snode = t1.digit > t2.digit ? temp2 : temp1;
-//						break;
-//					}
 					if (t1.digit != t2.digit) {
 						d1 = t1.digit;
 						d2 = t2.digit;
@@ -326,25 +335,8 @@ public class BigInteger {
 			// debug
 			traverseNodes(ans.front);
 
-			// REMOVE TRAILING ZEROS
-			 int last_idx = 0;
-			 int i = 0;
-			 DigitNode ref = ans.front;
-			 while (ref != null) {
-			 	if (ref.digit != 0) {
-			 		last_idx = i;
-				}
-			 	i++;
-			 	ref = ref.next;
-			 }
-			 int n = 0;
-			 DigitNode temp = ans.front;
-			 while (n != last_idx) {
-			 	temp = temp.next;
-			 	n++;
-			 }
-			 temp.next = null;
-
+			ans.front = removeTrailingZeros(ans.front);
+			ans.numDigits = getNumDigits(ans.front);
 			return ans;
 		}
 	}
@@ -362,9 +354,67 @@ public class BigInteger {
 	 * @return A new BigInteger which is the product of the first and second big integers
 	 */
 	public static BigInteger multiply(BigInteger first, BigInteger second) {
-		
-		
-		return null;
+		boolean negative = first.negative != second.negative;
+		BigInteger res = new BigInteger();
+		if (first.front == null || second.front==null) {
+			return res;
+		}
+		res.front = new DigitNode(0, null);
+		int trailingZeros = 0;
+		DigitNode ptr2 = second.front;
+		while (ptr2 != null) {
+			BigInteger mult = new BigInteger();
+			mult.front = new DigitNode(0, null);
+			DigitNode multPtr = mult.front;
+			for (int j=0; j<trailingZeros; j++) {
+				multPtr.digit = 0;
+				multPtr.next = new DigitNode(0, null);
+				multPtr = multPtr.next;
+			}
+			int carry = 0;
+			DigitNode ptr1 = first.front;
+			while (ptr1 != null) {
+				int product = ptr1.digit*ptr2.digit+carry;
+				carry = product/10;
+				multPtr.digit = product%10;
+				if(ptr1.next != null) {
+					multPtr.next = new DigitNode(0, null);
+					multPtr = multPtr.next;
+				} else {
+					if(carry != 0)
+						multPtr.next = new DigitNode(carry,null);
+					break;
+				}
+				ptr1 = ptr1.next;
+			}
+			ptr2 = ptr2.next;
+			trailingZeros++;
+			res = add(res, mult);
+		}
+		res.negative = negative;
+
+		// REMOVE TRAILING ZEROS
+		int last_idx = 0;
+		int i = 0;
+		DigitNode ref = res.front;
+		while (ref != null) {
+			if (ref.digit != 0) {
+				last_idx = i;
+			}
+			i++;
+			ref = ref.next;
+		}
+		int n = 0;
+		DigitNode temp = res.front;
+		while (n != last_idx) {
+			temp = temp.next;
+			n++;
+		}
+		temp.next = null;
+
+		res.front = removeTrailingZeros(res.front);
+		res.numDigits = getNumDigits(res.front);
+		return res;
 	}
 	
 	
