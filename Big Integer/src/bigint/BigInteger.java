@@ -329,7 +329,7 @@ public class BigInteger {
 				lnode = lnode.next;
 				snode = snode.next;
 				// debug print
-				System.out.println("RESDIG :::::::::::::::::::::::::::::::::::::: " + resDig);
+//				System.out.println("RESDIG :::::::::::::::::::::::::::::::::::::: " + resDig);
 			}
 			ans.negative = negative;
 			// debug
@@ -337,6 +337,7 @@ public class BigInteger {
 
 			ans.front = removeTrailingZeros(ans.front);
 			ans.numDigits = getNumDigits(ans.front);
+			traverseNodes(ans.front);
 			return ans;
 		}
 	}
